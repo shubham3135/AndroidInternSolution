@@ -69,6 +69,7 @@ public class MoneyConvertorFragment extends Fragment {
             }
         });
         retrieveData(1);
+        saveLastRefreshTime();
         return binding.getRoot();
     }
 
