@@ -13,7 +13,6 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.shubhamkumarwinner.internsolution.R;
 import com.shubhamkumarwinner.internsolution.data.network.MoneyConvertorApiStatus;
 import com.shubhamkumarwinner.internsolution.databinding.MoneyConvertorFragmentBinding;
 
