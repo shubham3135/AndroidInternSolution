@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,9 +22,9 @@ import java.text.SimpleDateFormat;
 
 public class MoneyConvertorFragment extends Fragment {
 
+    int value;
     private MoneyConvertorViewModel mViewModel;
     private MoneyConvertorFragmentBinding binding;
-    int value;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -34,70 +35,78 @@ public class MoneyConvertorFragment extends Fragment {
         mViewModel.get_moneyConvertorStatus().observe(getViewLifecycleOwner(), new Observer<MoneyConvertorApiStatus>() {
             @Override
             public void onChanged(MoneyConvertorApiStatus moneyConvertorApiStatus) {
-                if(moneyConvertorApiStatus == MoneyConvertorApiStatus.LOADING){
+                if (moneyConvertorApiStatus == MoneyConvertorApiStatus.LOADING) {
                     binding.noDataText.setVisibility(View.GONE);
                     binding.loadingBar.setVisibility(View.VISIBLE);
                     binding.data.setVisibility(View.GONE);
-                }else if(moneyConvertorApiStatus == MoneyConvertorApiStatus.ERROR){
+                } else if (moneyConvertorApiStatus == MoneyConvertorApiStatus.ERROR) {
                     binding.loadingBar.setVisibility(View.GONE);
                     binding.data.setVisibility(View.GONE);
                     binding.noDataText.setVisibility(View.VISIBLE);
-                }else {
+                } else {
                     binding.loadingBar.setVisibility(View.GONE);
                     binding.data.setVisibility(View.VISIBLE);
                     binding.noDataText.setVisibility(View.GONE);
+                    saveLastRefreshTime();
+                    retrieveData(1);
+                    binding.refreshTimeText.setText("last refresh " + getLastRefreshTime());
                 }
             }
         });
-        binding.refreshTimeText.setText("last refresh "+getLastRefreshTime());
         binding.btnConvert.setOnClickListener(view -> {
             String valueString = binding.editTextValue.getText().toString();
-            if(!valueString.equals("")){
+            if (!valueString.equals("")) {
                 value = Integer.parseInt(valueString);
-            }else {
+            } else {
                 value = 1;
             }
             retrieveData(value);
+            binding.editTextValue.onEditorAction(EditorInfo.IME_ACTION_DONE);
         });
 
         binding.btnRefresh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                binding.editTextValue.setText("");
+                binding.editTextValue.onEditorAction(EditorInfo.IME_ACTION_DONE);
+                mViewModel.getMoneyRates();
+                binding.loadingBar.setVisibility(View.VISIBLE);
                 retrieveData(1);
-                saveLastRefreshTime();
-                binding.refreshTimeText.setText("last refresh "+getLastRefreshTime());
             }
         });
-        retrieveData(1);
-        saveLastRefreshTime();
+        binding.refreshTimeText.setText("last refresh " + getLastRefreshTime());
         return binding.getRoot();
     }
 
-    private void retrieveData(int value){
-        mViewModel.get_moneyConvertor().observe(getViewLifecycleOwner(), moneyConvertor -> {
-            if(moneyConvertor.getRates() != null) {
-                binding.chf.setText(String.valueOf(moneyConvertor.getRates().CHF * value));
-                binding.sgd.setText(String.valueOf(moneyConvertor.getRates().SGD * value));
-                binding.pln.setText(String.valueOf(moneyConvertor.getRates().PLN * value));
-                binding.bgn.setText(String.valueOf(moneyConvertor.getRates().BGN * value));
-                binding.tRY.setText(String.valueOf(moneyConvertor.getRates().TRY * value));
-                binding.cny.setText(String.valueOf(moneyConvertor.getRates().CNY * value));
-                binding.nok.setText(String.valueOf(moneyConvertor.getRates().NOK * value));
-                binding.nzd.setText(String.valueOf(moneyConvertor.getRates().NZD * value));
-                binding.zar.setText(String.valueOf(moneyConvertor.getRates().ZAR * value));
-                binding.usd.setText(String.valueOf(moneyConvertor.getRates().USD * value));
-                binding.mxn.setText(String.valueOf(moneyConvertor.getRates().MXN * value));
-                binding.ils.setText(String.valueOf(moneyConvertor.getRates().ILS * value));
-                binding.gbp.setText(String.valueOf(moneyConvertor.getRates().GBP * value));
-                binding.krw.setText(String.valueOf(moneyConvertor.getRates().KRW * value));
-                binding.myr.setText(String.valueOf(moneyConvertor.getRates().MYR * value));
-            }else {
+    private void retrieveData(int value) {
+        mViewModel.get_rates().observe(getViewLifecycleOwner(), rates -> {
+            if (rates != null) {
+                binding.chf.setText(String.valueOf(rates.getCHF() * value));
+                binding.sgd.setText(String.valueOf(rates.getSGD() * value));
+                binding.pln.setText(String.valueOf(rates.getPLN() * value));
+                binding.bgn.setText(String.valueOf(rates.getBGN() * value));
+                binding.tRY.setText(String.valueOf(rates.getTRY() * value));
+                binding.cny.setText(String.valueOf(rates.getCNY() * value));
+                binding.nok.setText(String.valueOf(rates.getNOK() * value));
+                binding.nzd.setText(String.valueOf(rates.getNZD() * value));
+                binding.zar.setText(String.valueOf(rates.getZAR() * value));
+                binding.usd.setText(String.valueOf(rates.getUSD() * value));
+                binding.mxn.setText(String.valueOf(rates.getMXN() * value));
+                binding.ils.setText(String.valueOf(rates.getILS() * value));
+                binding.gbp.setText(String.valueOf(rates.getGBP() * value));
+                binding.krw.setText(String.valueOf(rates.getKRW() * value));
+                binding.myr.setText(String.valueOf(rates.getMYR() * value));
+                binding.noDataText.setVisibility(View.GONE);
+                binding.data.setVisibility(View.VISIBLE);
+                binding.loadingBar.setVisibility(View.GONE);
+            } else {
+                binding.data.setVisibility(View.GONE);
                 binding.noDataText.setVisibility(View.VISIBLE);
             }
         });
     }
 
-    private void saveLastRefreshTime(){
+    private void saveLastRefreshTime() {
         DateFormat formatter = new SimpleDateFormat("MM/dd/yyyy hh:mm aa");
         String date = formatter.format(System.currentTimeMillis());
         SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
@@ -106,7 +115,7 @@ public class MoneyConvertorFragment extends Fragment {
         editor.apply();
     }
 
-    private String getLastRefreshTime(){
+    private String getLastRefreshTime() {
         SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
         return sharedPref.getString("TIME", "09/26/2020 12:24");
     }

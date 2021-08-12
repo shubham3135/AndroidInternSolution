@@ -20,23 +20,23 @@ public class MoneyConvertorViewModel extends ViewModel {
         return _moneyConvertorStatus;
     }
 
-    private MutableLiveData<MoneyConvertor> _moneyConvertor = new MutableLiveData<>();
+    private MutableLiveData<Rates> _rates = new MutableLiveData<>();
 
-    public LiveData<MoneyConvertor> get_moneyConvertor() {
-        return _moneyConvertor;
+    public LiveData<Rates> get_rates() {
+        return _rates;
     }
 
     public MoneyConvertorViewModel(){
         getMoneyRates();
     }
 
-    private void getMoneyRates() {
+    public void getMoneyRates() {
         new MoneyConvertorApiService().moneyConvertorApi.getRates().enqueue(new Callback<MoneyConvertor>() {
             @Override
             public void onResponse(Call<MoneyConvertor> call, Response<MoneyConvertor> response) {
                 _moneyConvertorStatus.setValue(MoneyConvertorApiStatus.LOADING);
                 if (response.body()!=null){
-                    _moneyConvertor.setValue(response.body());
+                    _rates.setValue(response.body().getRates());
                     _moneyConvertorStatus.setValue(MoneyConvertorApiStatus.DONE);
                 }
             }
@@ -44,8 +44,9 @@ public class MoneyConvertorViewModel extends ViewModel {
             @Override
             public void onFailure(Call<MoneyConvertor> call, Throwable t) {
                 _moneyConvertorStatus.setValue(MoneyConvertorApiStatus.ERROR);
-                _moneyConvertor.setValue(new MoneyConvertor(false, "", "", new Rates()));
+                _rates.setValue(null);
             }
         });
     }
+
 }
